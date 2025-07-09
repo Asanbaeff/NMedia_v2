@@ -16,6 +16,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
+import org.json.JSONObject
 import ru.netology.nmedia.R
 import kotlin.random.Random
 
@@ -53,7 +54,7 @@ class FCMService : FirebaseMessagingService() {
     }
 
 
-    override fun onMessageReceived(message: RemoteMessage) {
+        override fun onMessageReceived(message: RemoteMessage) {
 
         Log.i("fcm_message", message.data.toString())
         println(Gson().toJson(message))
@@ -67,12 +68,13 @@ class FCMService : FirebaseMessagingService() {
 
             when (action) {
                 Action.LIKE -> handleLike(gson.fromJson(message.data[content], Like::class.java))
-                Action.SHARE -> "Share"
-                Action.COMMENT -> "Comment"
+                Action.NEW_POST -> handleNewPost(gson.fromJson(message.data[content], NewPost::class.java))
+                Action.SHARE, Action.COMMENT -> Log.d("fcm_message", "Received: $actionString")
                 Action.UNKNOWN -> Log.w("fcm_message", "Unknown action received: $actionString")
             }
         }
     }
+
 
     private fun handleLike(content: Like) {
         val notification = NotificationCompat.Builder(this, channelId)
@@ -101,11 +103,22 @@ class FCMService : FirebaseMessagingService() {
                 .notify(Random.nextInt(10_000_000), notification)
         }
     }
+    private fun handleNewPost(content: NewPost) {
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("${content.userName} опубликовал новый пост:")
+            .setContentText(content.postContent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(content.postContent))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notify(notification)
+    }
 }
 
 enum class Action {
-    LIKE, SHARE, COMMENT, UNKNOWN
-    //LIKE, UNKNOWN
+    //LIKE, SHARE, COMMENT, UNKNOWN
+    LIKE, SHARE, COMMENT, NEW_POST, UNKNOWN
 }
 
 data class Like(
@@ -114,4 +127,10 @@ data class Like(
     val postId: Long,
     val postAuthor: String,
 )
+data class NewPost(
+    val userName: String,
+    val postContent: String,
+)
+
+
 
