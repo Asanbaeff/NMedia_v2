@@ -1,7 +1,6 @@
 package ru.netology.nmedia.activity
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -36,8 +35,8 @@ class PostFragment : Fragment() {
 
         val postId = arguments?.getLong("postId")
 
-        viewModel.data.observe(viewLifecycleOwner) { posts ->
-            val post = posts.find { it.id == postId } ?: return@observe
+        viewModel.data.observe(viewLifecycleOwner) { feed ->
+            val post = feed.posts.find { it.id == postId } ?: return@observe
 
             binding.post.like.setOnClickListener {
                 viewModel.likeById(post.id)

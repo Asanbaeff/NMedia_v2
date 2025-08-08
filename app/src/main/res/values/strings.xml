@@ -28,5 +28,8 @@
     <string name="notification_user_liked" translatable="false">User %1$s liked %2$s\'s post</string>
     <string name="channel_remote_name" translatable="false">Server notifications</string>
     <string name="channel_remote_description" translatable="false">Notifications from remote server</string>
+    <string name="error_loading" translatable="false">Something went wrong. Try again later</string>
+    <string name="retry_loading" translatable="false">Retry</string>
+    <string name="empty_posts" translatable="false">There are no posts.\nIf you create a new post, it will appear here</string>
 
 </resources>
