@@ -11,20 +11,16 @@ import kotlin.concurrent.thread
 
 private val empty = Post(
     id = 0,
-    author = "",
     content = "",
-    published = "",
+    author = "",
     likedByMe = false,
     likes = 0,
-    shareById = 0,
-    videoUrl = "",
-    views = 0,
+    published = ""
 )
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
     // упрощённый вариант
     private val repository: PostRepository = PostRepositoryImpl()
-
     private val _data = MutableLiveData(FeedModel())
     val data: LiveData<FeedModel>
         get() = _data
@@ -75,29 +71,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun likeById(id: Long) {
-        thread {
-            val oldPosts = _data.value?.posts.orEmpty()
-            val updatedPosts = oldPosts.map { post ->
-                if (post.id == id) {
-                    post.copy(
-                        likedByMe = !post.likedByMe,
-                        likes = if (post.likedByMe) post.likes - 1 else post.likes + 1
-                    )
-                } else post
-            }
-            _data.postValue(_data.value?.copy(posts = updatedPosts))
-
-            try {
-                val targetPost = oldPosts.find { it.id == id } ?: return@thread
-                if (targetPost.likedByMe) {
-                    repository.unlikeById(id) // снять лайк
-                } else {
-                    repository.likeById(id)   // поставить лайк
-                }
-            } catch (e: IOException) {
-                _data.postValue(_data.value?.copy(posts = oldPosts))
-            }
-        }
+        thread { repository.likeById(id) }
     }
 
     fun removeById(id: Long) {
@@ -105,9 +79,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             // Оптимистичная модель
             val old = _data.value?.posts.orEmpty()
             _data.postValue(
-                _data.value?.copy(
-                    posts = _data.value?.posts.orEmpty()
-                        .filter { it.id != id }
+                _data.value?.copy(posts = _data.value?.posts.orEmpty()
+                    .filter { it.id != id }
                 )
             )
             try {
@@ -117,9 +90,4 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
-    fun shareById(id: Long) {
-
-    }
 }
-

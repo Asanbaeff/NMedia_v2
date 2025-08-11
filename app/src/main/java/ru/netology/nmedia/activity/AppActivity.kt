@@ -18,22 +18,21 @@ import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.NewPostFragment.Companion.textArg
 import ru.netology.nmedia.databinding.ActivityAppBinding
 
-class AppActivity : AppCompatActivity(R.layout.activity_app) {
+class AppActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        enableEdgeToEdge()
-//        val binding = ActivityAppBinding.inflate(layoutInflater)
-//        setContentView(binding.root)
-//        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.left)
-//            insets
-//        }
-
-
+        enableEdgeToEdge()
         requestNotificationsPermission()
+
+        val binding = ActivityAppBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
         intent?.let {
             if (it.action != Intent.ACTION_SEND) {
@@ -46,20 +45,15 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
             }
 
             intent.removeExtra(Intent.EXTRA_TEXT)
-            findNavController(R.id.nav_host_fragment).navigate(
-                R.id.action_feedFragment_to_newPostFragment,
-                Bundle().apply {
-                    textArg = text
-                }
-            )
-
-            findNavController(R.id.nav_host_fragment).navigate(
-                R.id.action_feedFragment_to_editPostFragment2,
-                Bundle().apply {
-                    textArg = text
-                }
-            )
+            findNavController(R.id.nav_host_fragment)
+                .navigate(
+                    R.id.action_feedFragment_to_newPostFragment,
+                    Bundle().apply {
+                        textArg = text
+                    }
+                )
         }
+
         checkGoogleApiAvailability()
     }
 
@@ -69,9 +63,11 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
         }
 
         val permission = Manifest.permission.POST_NOTIFICATIONS
+
         if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
             return
         }
+
         requestPermissions(arrayOf(permission), 1)
     }
 
