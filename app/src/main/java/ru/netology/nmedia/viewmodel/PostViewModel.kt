@@ -71,7 +71,31 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun likeById(id: Long) {
-        thread { repository.likeById(id) }
+        thread {
+            try {
+                // Оптимистичное обновление: предполагаем, что лайк успешен
+                val oldPosts = _data.value?.posts.orEmpty()
+                val postToUpdate = oldPosts.find { it.id == id } ?: return@thread
+                val updatedPostOptimistic = postToUpdate.copy(
+                    likedByMe = !postToUpdate.likedByMe,
+                    likes = if (postToUpdate.likedByMe) postToUpdate.likes - 1 else postToUpdate.likes + 1
+                )
+                _data.postValue(
+                    _data.value?.copy(
+                        posts = oldPosts.map { if (it.id == id) updatedPostOptimistic else it }
+                    )
+                )
+                // Выполняем запрос к серверу
+                val updatedPost = repository.likeById(id)
+                // Обновляем данные с учетом ответа сервера
+                _data.postValue(
+                    _data.value?.copy()
+                )
+            } catch (e: IOException) {
+                // В случае ошибки возвращаем старые данные
+                _data.postValue(_data.value?.copy(error = true))
+            }
+        }
     }
 
     fun removeById(id: Long) {

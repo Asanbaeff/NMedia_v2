@@ -10,7 +10,7 @@ import ru.netology.nmedia.dto.Post
 import java.util.concurrent.TimeUnit
 
 
-class PostRepositoryImpl: PostRepository {
+class PostRepositoryImpl : PostRepository {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .build()
@@ -40,10 +40,15 @@ class PostRepositoryImpl: PostRepository {
             .post("".toRequestBody())
             .url("${BASE_URL}/api/posts/$id/likes")
             .build()
-        client.newCall(request)
+        return client.newCall(request)
             .execute()
-            .close()
+            .use { response ->
+                response.body?.string()?.let {
+                    gson.fromJson(it, Post::class.java)
+                } ?: throw RuntimeException("body is null")
+            }
     }
+
 
     override fun save(post: Post) {
         val request: Request = Request.Builder()
