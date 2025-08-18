@@ -22,8 +22,6 @@ import ru.netology.nmedia.databinding.ActivityAppBinding
 
 
 class AppActivity : AppCompatActivity() {
-    private val urls = listOf("netology.jpg", "sber.jpg", "tcs.jpg", "404.png")
-    private var index = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +59,6 @@ class AppActivity : AppCompatActivity() {
         }
 
         checkGoogleApiAvailability()
-        loadImage(binding.imageView)
     }
 
     private fun requestNotificationsPermission() {
@@ -96,19 +93,4 @@ class AppActivity : AppCompatActivity() {
             println(it)
         }
     }
-
-    private fun loadImage(imageView: ImageView) {
-        if (index >= urls.size) {
-            index = 0
-        }
-        val url = "http://10.0.2.2:9999/avatars/${urls[index++]}"
-        Glide.with(imageView)
-            .load(url)
-            .placeholder(R.drawable.ic_loading_100dp)
-            .error(R.drawable.ic_error_100dp)
-            .timeout(10_000)
-            .into(imageView)
-    }
-
-
-}
+ }

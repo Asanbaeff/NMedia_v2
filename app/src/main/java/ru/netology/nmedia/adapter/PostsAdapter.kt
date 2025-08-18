@@ -2,10 +2,12 @@ package ru.netology.nmedia.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
@@ -19,7 +21,8 @@ interface OnInteractionListener {
 
 class PostsAdapter(
     private val onInteractionListener: OnInteractionListener,
-) : ListAdapter<Post, PostViewHolder>(PostDiffCallback()) {
+
+    ) : ListAdapter<Post, PostViewHolder>(PostDiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PostViewHolder(binding, onInteractionListener)
@@ -34,7 +37,7 @@ class PostsAdapter(
 class PostViewHolder(
     private val binding: CardPostBinding,
     private val onInteractionListener: OnInteractionListener,
-) : RecyclerView.ViewHolder(binding.root) {
+    ) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(post: Post) {
         binding.apply {
@@ -54,6 +57,7 @@ class PostViewHolder(
                                 onInteractionListener.onRemove(post)
                                 true
                             }
+
                             R.id.edit -> {
                                 onInteractionListener.onEdit(post)
                                 true
@@ -73,6 +77,7 @@ class PostViewHolder(
                 onInteractionListener.onShare(post)
             }
         }
+        loadImage(binding.avatar, post.author)
     }
 }
 
@@ -85,3 +90,27 @@ class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
         return oldItem == newItem
     }
 }
+
+private fun loadImage(imageView: ImageView, author: String) {
+    val authorToAvatar = mapOf(
+        "Netology" to "netology.jpg",
+        "Сбер" to "sber.jpg",
+        "Тинькофф" to "tcs.jpg",
+    )
+
+    val fileName = authorToAvatar[author] ?: "404.png"
+
+    val url = "http://10.0.2.2:9999/avatars/$fileName"
+
+    Glide.with(imageView.context)
+        .load(url)
+        .circleCrop()
+        .placeholder(R.drawable.ic_loading_100dp)
+        .error(R.drawable.ic_error_100dp)
+        .timeout(10_000)
+        .into(imageView)
+}
+
+
+
+
