@@ -37,7 +37,7 @@ class PostsAdapter(
 class PostViewHolder(
     private val binding: CardPostBinding,
     private val onInteractionListener: OnInteractionListener,
-    ) : RecyclerView.ViewHolder(binding.root) {
+) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(post: Post) {
         binding.apply {
@@ -77,7 +77,7 @@ class PostViewHolder(
                 onInteractionListener.onShare(post)
             }
         }
-        loadImage(binding.avatar, post.author)
+        loadImage(binding.avatar, post)
     }
 }
 
@@ -91,16 +91,9 @@ class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
     }
 }
 
-private fun loadImage(imageView: ImageView, author: String) {
-    val authorToAvatar = mapOf(
-        "Netology" to "netology.jpg",
-        "Сбер" to "sber.jpg",
-        "Тинькофф" to "tcs.jpg",
-    )
-
-    val fileName = authorToAvatar[author] ?: "404.png"
-
-    val url = "http://10.0.2.2:9999/avatars/$fileName"
+private fun loadImage(imageView: ImageView, post: Post) {
+    //val urls = listOf("netology.jpg", "sber.jpg", "tcs.jpg", "404.png")
+    val url = "http://10.0.2.2:9999/avatars/${post.authorAvatar}"
 
     Glide.with(imageView.context)
         .load(url)
