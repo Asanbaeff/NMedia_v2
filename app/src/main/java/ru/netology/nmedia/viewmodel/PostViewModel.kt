@@ -86,18 +86,25 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun likeById(id: Long) {
-        repository.likeById(id, object : PostRepository.Callback<Post> {
+        val post = _data.value?.posts?.find { it.id == id } ?: return
+        val callback = object : PostRepository.Callback<Post> {
             override fun onSuccess(result: Post) {
                 val updated = _data.value?.posts.orEmpty().map {
                     if (it.id == id) result else it
                 }
-                _data.postValue(_data.value?.copy(posts = updated))
+                _data.postValue(_data.value?.copy(posts = updated, error = null))
             }
 
             override fun onError(e: Throwable) {
                 _data.postValue(_data.value?.copy(error = e as? AppError))
             }
-        })
+        }
+
+        if (post.likedByMe) {
+            repository.dislikeById(id, callback)
+        } else {
+            repository.likeById(id, callback)
+        }
     }
 
     fun removeById(id: Long) {

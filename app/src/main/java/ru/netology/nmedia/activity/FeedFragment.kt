@@ -60,12 +60,14 @@ class FeedFragment : Fragment() {
             binding.progress.isVisible = state.loading
 
             if (state.error != null) {
+                val errorMessage = getString(R.string.error) + ": ${state.error.message}"
                 Snackbar.make(
                     binding.root,
-                    "Ошибка: ${state.error.message}",
+                    errorMessage,
                     Snackbar.LENGTH_INDEFINITE
                 )
-                    .setAction("Повторить") { viewModel.loadPosts() }
+                    .setAnchorView(binding.fab)
+                    .setAction(R.string.retry) { viewModel.loadPosts() }
                     .show()
                 binding.retryButton.isVisible = true
             } else {

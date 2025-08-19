@@ -99,6 +99,29 @@ class PostRepositoryImpl : PostRepository {
             })
     }
 
+    override fun dislikeById(id: Long, callback: PostRepository.Callback<Post>) {
+        PostsApi.retrofitService.dislikeById(id)
+            .enqueue(object : Callback<Post> {
+                override fun onResponse(call: Call<Post>, response: Response<Post>) {
+                    if (!response.isSuccessful) {
+                        callback.onError(AppError.ApiError(response.code(), response.message()))
+                        return
+                    }
+                    val body = response.body()
+                    if (body == null) {
+                        callback.onError(AppError.UnknownError("Response body is null"))
+                        return
+                    }
+                    callback.onSuccess(body)
+                }
+
+                override fun onFailure(call: Call<Post>, t: Throwable) {
+                    callback.onError(mapError(t))
+                }
+            })
+
+    }
+
 
     private fun mapError(t: Throwable): AppError = when (t) {
         is IOException -> AppError.NetworkError(t.message ?: "Network error")
