@@ -79,6 +79,9 @@ class AppActivity : AppCompatActivity() {
         with(GoogleApiAvailability.getInstance()) {
             val code = isGooglePlayServicesAvailable(this@AppActivity)
             if (code == ConnectionResult.SUCCESS) {
+                FirebaseMessaging.getInstance().token.addOnSuccessListener {
+                    println(it)
+                }
                 return@with
             }
             if (isUserResolvableError(code)) {
@@ -87,10 +90,6 @@ class AppActivity : AppCompatActivity() {
             }
             Toast.makeText(this@AppActivity, R.string.google_play_unavailable, Toast.LENGTH_LONG)
                 .show()
-        }
-
-        FirebaseMessaging.getInstance().token.addOnSuccessListener {
-            println(it)
         }
     }
  }

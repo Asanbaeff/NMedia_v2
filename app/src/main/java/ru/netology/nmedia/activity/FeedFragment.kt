@@ -12,9 +12,9 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
+import ru.netology.nmedia.adapter.PostWithAuthor
 import ru.netology.nmedia.adapter.PostsAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
-import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment() {
@@ -29,22 +29,22 @@ class FeedFragment : Fragment() {
         val binding = FragmentFeedBinding.inflate(inflater, container, false)
 
         val adapter = PostsAdapter(object : OnInteractionListener {
-            override fun onEdit(post: Post) {
-                viewModel.edit(post)
+            override fun onEdit(item: PostWithAuthor) {
+                viewModel.edit(item.post)
             }
 
-            override fun onLike(post: Post) {
-                viewModel.likeById(post.id)
+            override fun onLike(item: PostWithAuthor) {
+                viewModel.likeById(item.post.id)
             }
 
-            override fun onRemove(post: Post) {
-                viewModel.removeById(post.id)
+            override fun onRemove(item: PostWithAuthor) {
+                viewModel.removeById(item.post.id)
             }
 
-            override fun onShare(post: Post) {
+            override fun onShare(item: PostWithAuthor) {
                 val intent = Intent().apply {
                     action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, post.content)
+                    putExtra(Intent.EXTRA_TEXT, item.post.content)
                     type = "text/plain"
                 }
 
@@ -56,7 +56,7 @@ class FeedFragment : Fragment() {
         binding.list.adapter = adapter
 
         viewModel.data.observe(viewLifecycleOwner) { state ->
-            adapter.submitList(state.posts)
+            adapter.submitList(state.postsWithAuthors)
             binding.progress.isVisible = state.loading
 
             if (state.error != null) {
@@ -73,7 +73,7 @@ class FeedFragment : Fragment() {
             } else {
                 binding.retryButton.isVisible = false
             }
-            //binding.errorGroup.isVisible = state.error
+
             binding.emptyText.isVisible = state.empty
         }
 
