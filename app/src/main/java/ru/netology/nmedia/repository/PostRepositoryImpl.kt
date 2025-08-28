@@ -1,83 +1,96 @@
 package ru.netology.nmedia.repository
 
-
-import ru.netology.nmedia.api.PostsApi
-import ru.netology.nmedia.dto.Author
+import androidx.lifecycle.*
+import okio.IOException
+import ru.netology.nmedia.api.*
+import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dto.Post
-import java.io.IOException
+import ru.netology.nmedia.entity.PostEntity
+import ru.netology.nmedia.entity.toDto
+import ru.netology.nmedia.entity.toEntity
+import ru.netology.nmedia.error.ApiError
+import ru.netology.nmedia.error.NetworkError
+import ru.netology.nmedia.error.UnknownError
 
+class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
+    override val data = dao.getAll().map(List<PostEntity>::toDto)
 
-sealed class AppError(val code: Int, message: String) : RuntimeException(message) {
-    class ApiError(code: Int, message: String) : AppError(code, message)
-    class NetworkError(message: String) : AppError(-1, message)
-    class UnknownError(message: String) : AppError(-2, message)
-}
-
-class PostRepositoryImpl : PostRepository {
-
-    override suspend fun getAll(): List<Post> {
+    override suspend fun getAll() {
         try {
-            return PostsApi.retrofitService.getAll()
+            val response = PostsApi.service.getAll()
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
+
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+            dao.insert(body.toEntity())
         } catch (e: IOException) {
-            throw AppError.NetworkError(e.message ?: "Network error")
+            throw NetworkError
         } catch (e: Exception) {
-            throw AppError.UnknownError(e.message ?: "Unknown error")
+            throw UnknownError
         }
     }
 
-    override suspend fun getAllAuthors(): List<Author> {
+    override suspend fun save(post: Post) {
         try {
-            return PostsApi.retrofitService.getAllAuthors()
-        } catch (e: IOException) {
-            throw AppError.NetworkError(e.message ?: "Network error")
-        } catch (e: Exception) {
-            throw AppError.UnknownError(e.message ?: "Unknown error")
-        }
-    }
+            val response = PostsApi.service.save(post)
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
 
-    override suspend fun save(post: Post): Post {
-        try {
-            return PostsApi.retrofitService.save(post)
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+            dao.insert(PostEntity.fromDto(body))
         } catch (e: IOException) {
-            throw AppError.NetworkError(e.message ?: "Network error")
+            throw NetworkError
         } catch (e: Exception) {
-            throw AppError.UnknownError(e.message ?: "Unknown error")
+            throw UnknownError
         }
     }
 
     override suspend fun removeById(id: Long) {
+        dao.removeById(id)
+
         try {
-            PostsApi.retrofitService.removeById(id)
+            val response = PostsApi.service.removeById(id)
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
         } catch (e: IOException) {
-            throw AppError.NetworkError(e.message ?: "Network error")
+            throw NetworkError
         } catch (e: Exception) {
-            throw AppError.UnknownError(e.message ?: "Unknown error")
+            throw UnknownError
         }
     }
 
-    override suspend fun likeById(id: Long): Post {
+    override suspend fun likeById(id: Long) {
+        val post = dao.getPostById(id)?.toDto() ?: return
+        dao.insert(
+            PostEntity.fromDto(
+                post.copy(
+                    likedByMe = !post.likedByMe,
+                    likes = if (post.likedByMe) post.likes - 1 else post.likes + 1
+                )
+            )
+        )
+
         try {
-            return PostsApi.retrofitService.likeById(id)
+            val response = if (post.likedByMe) {
+                PostsApi.service.dislikeById(id)
+            } else {
+                PostsApi.service.likeById(id)
+            }
+
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
+
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+            dao.insert(PostEntity.fromDto(body))
         } catch (e: IOException) {
-            throw AppError.NetworkError(e.message ?: "Network error")
+            throw NetworkError
         } catch (e: Exception) {
-            throw AppError.UnknownError(e.message ?: "Unknown error")
+            throw UnknownError
         }
     }
 
-    override suspend fun dislikeById(id: Long): Post {
-        try {
-            return PostsApi.retrofitService.dislikeById(id)
-        } catch (e: IOException) {
-            throw AppError.NetworkError(e.message ?: "Network error")
-        } catch (e: Exception) {
-            throw AppError.UnknownError(e.message ?: "Unknown error")
-        }
-    }
-
-
-    private fun mapError(t: Throwable): AppError = when (t) {
-        is IOException -> AppError.NetworkError(t.message ?: "Network error")
-        else -> AppError.UnknownError(t.message ?: "Unknown error")
-    }
 }

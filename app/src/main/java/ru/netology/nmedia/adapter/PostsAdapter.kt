@@ -9,36 +9,27 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
-import ru.netology.nmedia.dto.Author
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.view.loadCircleCrop
-import java.text.SimpleDateFormat
-import java.util.*
 
 interface OnInteractionListener {
-    fun onLike(item: PostWithAuthor) {}
-    fun onEdit(item: PostWithAuthor) {}
-    fun onRemove(item: PostWithAuthor) {}
-    fun onShare(item: PostWithAuthor) {}
+    fun onLike(post: Post) {}
+    fun onEdit(post: Post) {}
+    fun onRemove(post: Post) {}
+    fun onShare(post: Post) {}
 }
-
-
-data class PostWithAuthor(
-    val post: Post,
-    val author: Author
-)
 
 class PostsAdapter(
     private val onInteractionListener: OnInteractionListener,
-) : ListAdapter<PostWithAuthor, PostViewHolder>(PostDiffCallback()) {
+) : ListAdapter<Post, PostViewHolder>(PostDiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PostViewHolder(binding, onInteractionListener)
     }
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
-        val item = getItem(position)
-        holder.bind(item)
+        val post = getItem(position)
+        holder.bind(post)
     }
 }
 
@@ -47,31 +38,29 @@ class PostViewHolder(
     private val onInteractionListener: OnInteractionListener,
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(item: PostWithAuthor) {
-        val post = item.post
-        val author = item.author
-
+    fun bind(post: Post) {
         binding.apply {
-            this.author.text = author.name
-            published.text = formatDate(post.published)
+            author.text = post.author
+            published.text = post.published
             content.text = post.content
-            avatar.loadCircleCrop("${BuildConfig.BASE_URL}/avatars/${author.avatar}")
+            avatar.loadCircleCrop("${BuildConfig.BASE_URL}/avatars/${post.authorAvatar}")
             like.isChecked = post.likedByMe
             like.text = "${post.likes}"
 
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {
                     inflate(R.menu.options_post)
-                    setOnMenuItemClickListener { menuItem ->
-                        when (menuItem.itemId) {
+                    setOnMenuItemClickListener { item ->
+                        when (item.itemId) {
                             R.id.remove -> {
-                                onInteractionListener.onRemove(item)
+                                onInteractionListener.onRemove(post)
                                 true
                             }
                             R.id.edit -> {
-                                onInteractionListener.onEdit(item)
+                                onInteractionListener.onEdit(post)
                                 true
                             }
+
                             else -> false
                         }
                     }
@@ -79,27 +68,22 @@ class PostViewHolder(
             }
 
             like.setOnClickListener {
-                onInteractionListener.onLike(item)
+                onInteractionListener.onLike(post)
             }
 
             share.setOnClickListener {
-                onInteractionListener.onShare(item)
+                onInteractionListener.onShare(post)
             }
         }
     }
-
-    private fun formatDate(timestamp: Long): String {
-        val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-        return sdf.format(Date(timestamp))
-    }
 }
 
-class PostDiffCallback : DiffUtil.ItemCallback<PostWithAuthor>() {
-    override fun areItemsTheSame(oldItem: PostWithAuthor, newItem: PostWithAuthor): Boolean {
-        return oldItem.post.id == newItem.post.id
+class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
+    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItem: PostWithAuthor, newItem: PostWithAuthor): Boolean {
+    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean {
         return oldItem == newItem
     }
 }

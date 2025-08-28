@@ -12,9 +12,9 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
-import ru.netology.nmedia.adapter.PostWithAuthor
 import ru.netology.nmedia.adapter.PostsAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
+import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment() {
@@ -29,22 +29,22 @@ class FeedFragment : Fragment() {
         val binding = FragmentFeedBinding.inflate(inflater, container, false)
 
         val adapter = PostsAdapter(object : OnInteractionListener {
-            override fun onEdit(item: PostWithAuthor) {
-                viewModel.edit(item.post)
+            override fun onEdit(post: Post) {
+                viewModel.edit(post)
             }
 
-            override fun onLike(item: PostWithAuthor) {
-                viewModel.likeById(item.post.id)
+            override fun onLike(post: Post) {
+                viewModel.likeById(post.id)
             }
 
-            override fun onRemove(item: PostWithAuthor) {
-                viewModel.removeById(item.post.id)
+            override fun onRemove(post: Post) {
+                viewModel.removeById(post.id)
             }
 
-            override fun onShare(item: PostWithAuthor) {
+            override fun onShare(post: Post) {
                 val intent = Intent().apply {
                     action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, item.post.content)
+                    putExtra(Intent.EXTRA_TEXT, post.content)
                     type = "text/plain"
                 }
 
@@ -54,31 +54,22 @@ class FeedFragment : Fragment() {
             }
         })
         binding.list.adapter = adapter
-
-        viewModel.data.observe(viewLifecycleOwner) { state ->
-            adapter.submitList(state.postsWithAuthors)
+        viewModel.dataState.observe(viewLifecycleOwner) { state ->
             binding.progress.isVisible = state.loading
-
-            if (state.error != null) {
-                val errorMessage = getString(R.string.error) + ": ${state.error.message}"
-                Snackbar.make(
-                    binding.root,
-                    errorMessage,
-                    Snackbar.LENGTH_INDEFINITE
-                )
-                    .setAnchorView(binding.fab)
-                    .setAction(R.string.retry) { viewModel.loadPosts() }
+            binding.swiperefresh.isRefreshing = state.refreshing
+            if (state.error) {
+                Snackbar.make(binding.root, R.string.error_loading, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.retry_loading) { viewModel.loadPosts() }
                     .show()
-                binding.retryButton.isVisible = true
-            } else {
-                binding.retryButton.isVisible = false
             }
-
+        }
+        viewModel.data.observe(viewLifecycleOwner) { state ->
+            adapter.submitList(state.posts)
             binding.emptyText.isVisible = state.empty
         }
 
-        binding.retryButton.setOnClickListener {
-            viewModel.loadPosts()
+        binding.swiperefresh.setOnRefreshListener {
+            viewModel.refreshPosts()
         }
 
         binding.fab.setOnClickListener {

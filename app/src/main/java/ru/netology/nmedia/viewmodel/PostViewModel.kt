@@ -1,36 +1,36 @@
 package ru.netology.nmedia.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.async
+import androidx.lifecycle.*
 import kotlinx.coroutines.launch
-import ru.netology.nmedia.adapter.PostWithAuthor
-import ru.netology.nmedia.dto.Author
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
-import ru.netology.nmedia.repository.AppError
+import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.repository.PostRepository
 import ru.netology.nmedia.repository.PostRepositoryImpl
 import ru.netology.nmedia.util.SingleLiveEvent
 
 private val empty = Post(
     id = 0,
-    authorId = 1,
     content = "",
+    author = "",
+    authorAvatar = "",
     likedByMe = false,
     likes = 0,
-    published = 0,
-    attachment = null
+    published = ""
 )
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: PostRepository = PostRepositoryImpl()
-    private val _data = MutableLiveData(FeedModel())
-    val data: LiveData<FeedModel>
-        get() = _data
+    // упрощённый вариант
+    private val repository: PostRepository =
+        PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
+
+    val data: LiveData<FeedModel> = repository.data.map(::FeedModel)
+    private val _dataState = MutableLiveData<FeedModelState>()
+    val dataState: LiveData<FeedModelState>
+        get() = _dataState
+
     private val edited = MutableLiveData(empty)
     private val _postCreated = SingleLiveEvent<Unit>()
     val postCreated: LiveData<Unit>
@@ -42,48 +42,37 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loadPosts() = viewModelScope.launch {
         try {
-            _data.value = _data.value?.copy(loading = true, error = null)
-
-
-            val postsDeferred = async { repository.getAll() }
-            val authorsDeferred = async { repository.getAllAuthors() }
-            val posts = postsDeferred.await()
-            val authors = authorsDeferred.await()
-
-            val authorsMap = authors.associateBy { it.id }
-
-            val postsWithAuthors = posts.map { post ->
-                PostWithAuthor(
-                    post,
-                    authorsMap[post.authorId] ?: Author(0, "Unknown", "netology.jpg")
-                )
-            }
-
-            _data.postValue(
-                FeedModel(
-                    posts = posts,
-                    postsWithAuthors = postsWithAuthors,
-                    loading = false,
-                    error = null,
-                    empty = posts.isEmpty()
-                )
-            )
-        } catch (e: AppError) {
-            _data.postValue(_data.value?.copy(loading = false, error = e))
+            _dataState.value = FeedModelState(loading = true)
+            repository.getAll()
+            _dataState.value = FeedModelState()
+        } catch (e: Exception) {
+            _dataState.value = FeedModelState(error = true)
         }
     }
 
-    fun save() = viewModelScope.launch {
-        edited.value?.let { post ->
-            try {
-                repository.save(post)
-                _postCreated.postValue(Unit)
-            } catch (e: AppError) {
-                _data.postValue(_data.value?.copy(error = e))
-            } finally {
-                edited.value = empty
+    fun refreshPosts() = viewModelScope.launch {
+        try {
+            _dataState.value = FeedModelState(refreshing = true)
+            repository.getAll()
+            _dataState.value = FeedModelState()
+        } catch (e: Exception) {
+            _dataState.value = FeedModelState(error = true)
+        }
+    }
+
+    fun save() {
+        edited.value?.let {
+            _postCreated.value = Unit
+            viewModelScope.launch {
+                try {
+                    repository.save(it)
+                    _dataState.value = FeedModelState()
+                } catch (e: Exception) {
+                    _dataState.value = FeedModelState(error = true)
+                }
             }
         }
+        edited.value = empty
     }
 
     fun edit(post: Post) {
@@ -92,44 +81,27 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun changeContent(content: String) {
         val text = content.trim()
-        if (edited.value?.content == text) return
+        if (edited.value?.content == text) {
+            return
+        }
         edited.value = edited.value?.copy(content = text)
     }
 
     fun likeById(id: Long) = viewModelScope.launch {
-        val oldData = _data.value
-        val updatedList = oldData?.postsWithAuthors.orEmpty().map { item ->
-            if (item.post.id == id) {
-                item.copy(
-                    post = item.post.copy(
-                        likedByMe = !item.post.likedByMe,
-                        likes = if (item.post.likedByMe) item.post.likes - 1 else item.post.likes + 1
-                    )
-                )
-            } else {
-                item
-            }
-        }
-        _data.value = oldData?.copy(postsWithAuthors = updatedList)
-
         try {
-            val post = oldData?.posts?.find { it.id == id } ?: return@launch
-            if (post.likedByMe) repository.dislikeById(id) else repository.likeById(id)
-        } catch (e: AppError) {
-            _data.postValue(oldData?.copy(error = e))
+            repository.likeById(id)
+            _dataState.value = FeedModelState()
+        } catch (e: Exception) {
+            _dataState.value = FeedModelState(error = true)
         }
     }
 
     fun removeById(id: Long) = viewModelScope.launch {
-        val oldData = _data.value
-        _data.value = oldData?.copy(
-            postsWithAuthors = oldData.postsWithAuthors.filterNot { it.post.id == id }
-        )
         try {
             repository.removeById(id)
-        } catch (e: AppError) {
-            _data.postValue(oldData?.copy(error = e))
+            _dataState.value = FeedModelState()
+        } catch (e: Exception) {
+            _dataState.value = FeedModelState(error = true)
         }
     }
 }
-
