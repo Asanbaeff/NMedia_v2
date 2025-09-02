@@ -48,30 +48,30 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     }
 
     override suspend fun removeById(id: Long) {
+        val post = dao.getPostById(id)?.toDto()
         dao.removeById(id)
 
         try {
             val response = PostsApi.service.removeById(id)
             if (!response.isSuccessful) {
-                throw ApiError(response.code(), response.message())
+                post?.let { dao.insert(PostEntity.fromDto(it)) }
             }
         } catch (e: IOException) {
+            post?.let { dao.insert(PostEntity.fromDto(it)) }
             throw NetworkError
         } catch (e: Exception) {
+            post?.let { dao.insert(PostEntity.fromDto(it)) }
             throw UnknownError
         }
     }
 
     override suspend fun likeById(id: Long) {
         val post = dao.getPostById(id)?.toDto() ?: return
-        dao.insert(
-            PostEntity.fromDto(
-                post.copy(
-                    likedByMe = !post.likedByMe,
-                    likes = if (post.likedByMe) post.likes - 1 else post.likes + 1
-                )
-            )
+        val toggled = post.copy(
+            likedByMe = !post.likedByMe,
+            likes = if (post.likedByMe) post.likes - 1 else post.likes + 1
         )
+        dao.insert(PostEntity.fromDto(toggled))
 
         try {
             val response = if (post.likedByMe) {
@@ -79,18 +79,16 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             } else {
                 PostsApi.service.likeById(id)
             }
-
             if (!response.isSuccessful) {
+                dao.insert(PostEntity.fromDto(post))
                 throw ApiError(response.code(), response.message())
             }
-
-            val body = response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(PostEntity.fromDto(body))
         } catch (e: IOException) {
+            dao.insert(PostEntity.fromDto(post))
             throw NetworkError
         } catch (e: Exception) {
+            dao.insert(PostEntity.fromDto(post))
             throw UnknownError
         }
     }
-
 }
