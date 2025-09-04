@@ -1,7 +1,14 @@
 package ru.netology.nmedia.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
@@ -22,22 +29,35 @@ private val empty = Post(
 )
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
-    // упрощённый вариант
-    private val repository: PostRepository =
+        private val repository: PostRepository =
         PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
 
-    val data: LiveData<FeedModel> = repository.data.map(::FeedModel)
+    val data: LiveData<FeedModel> = repository.data
+        .map(::FeedModel)
+        .asLiveData(Dispatchers.Default)
+
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>
         get() = _dataState
 
     private val edited = MutableLiveData(empty)
     private val _postCreated = SingleLiveEvent<Unit>()
+    private val _newerCount = MutableLiveData<Int>()
+    val newerCount: LiveData<Int> get() = _newerCount
+
     val postCreated: LiveData<Unit>
         get() = _postCreated
 
     init {
         loadPosts()
+
+        viewModelScope.launch {
+            repository.getNewerCount(0L) // можно будет подставлять id самого свежего поста
+                .catch { e -> e.printStackTrace() }
+                .collect { count ->
+                    _newerCount.postValue(count)
+                }
+        }
     }
 
     fun loadPosts() = viewModelScope.launch {
@@ -104,4 +124,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             _dataState.value = FeedModelState(error = true)
         }
     }
+
+    fun showNewerPosts() = viewModelScope.launch {
+        try {
+            val latestId = data.value?.posts?.firstOrNull()?.id ?: 0L
+            repository.showNewerPosts(latestId)
+            _newerCount.value = 0 // скрываем плашку
+        } catch (e: Exception) {
+            _dataState.value = FeedModelState(error = true)
+        }
+    }
+
 }
