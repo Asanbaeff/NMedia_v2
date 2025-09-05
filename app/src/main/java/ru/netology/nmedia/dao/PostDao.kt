@@ -29,4 +29,12 @@ interface PostDao {
 
     @Query("SELECT * FROM PostEntity WHERE id = :id LIMIT 1")
     suspend fun getPostById(id: Long): PostEntity?
+
+    @Query("SELECT COUNT(*) FROM PostEntity WHERE hidden = 1")
+    fun getHiddenCount(): Flow<Int>
+
+    @Query("UPDATE PostEntity SET hidden = 0 WHERE hidden = 1")
+    suspend fun unhideAll()
+
+
 }
