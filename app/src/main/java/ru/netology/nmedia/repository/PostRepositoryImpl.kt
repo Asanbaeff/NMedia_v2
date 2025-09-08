@@ -1,7 +1,10 @@
 package ru.netology.nmedia.repository
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import ru.netology.nmedia.api.PostsApi
@@ -21,7 +24,6 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         .flowOn(Dispatchers.Default)
 
 
-
     override suspend fun getAll() {
         try {
             val response = PostsApi.service.getAll()
@@ -39,8 +41,23 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     }
 
 
+    override fun getNewerCount(): Flow<Int> = flow {
+        while (true) {
+            delay(10_000L)
+            val sinceId = dao.maxId()
+            val response = PostsApi.service.getNewer(sinceId)
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
 
-    override fun getNewerCount(): Flow<Int> = dao.getHiddenCount()
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+            dao.insert(body.toEntity().map { it.copy(hidden = true) })
+            emit(body.size)
+        }
+    }
+        .catch { e -> e.printStackTrace() }
+        .flowOn(Dispatchers.Default)
+
 
     override suspend fun save(post: Post) {
         try {
@@ -107,26 +124,14 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
 
 
     override suspend fun showNewerPosts() {
-        try {
-            val response = PostsApi.service.getNewer(id = 0)
-            if (!response.isSuccessful) {
-                throw ApiError(response.code(), response.message())
-            }
-            val body = response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(body.toEntity()) // <-- теперь сохраняем в БД
-        } catch (e: IOException) {
-            throw NetworkError
-        } catch (e: Exception) {
-            throw UnknownError
+        val sinceId = dao.maxId() ?: 0L
+        val response = PostsApi.service.getNewer(sinceId)
+        if (!response.isSuccessful) {
+            throw ApiError(response.code(), response.message())
         }
-    }
-
-    suspend fun saveNewPosts() {
-        val response = PostsApi.service.getNewer(id = 0)
         val body = response.body() ?: throw ApiError(response.code(), response.message())
         dao.insert(body.toEntity())
     }
-
 
 
 }

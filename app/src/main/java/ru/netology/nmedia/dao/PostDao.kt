@@ -9,7 +9,7 @@ import ru.netology.nmedia.entity.PostEntity
 
 @Dao
 interface PostDao {
-    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
+    @Query("SELECT * FROM PostEntity WHERE hidden = 0 ORDER BY id DESC")
     fun getAll(): Flow<List<PostEntity>>
 
     @Query("SELECT COUNT(*) == 0 FROM PostEntity")
@@ -35,6 +35,18 @@ interface PostDao {
 
     @Query("UPDATE PostEntity SET hidden = 0 WHERE hidden = 1")
     suspend fun unhideAll()
+
+    @Query("UPDATE PostEntity SET hidden = 0 WHERE hidden = 1")
+    suspend fun showAll()
+
+    @Query("SELECT MAX(id) FROM PostEntity WHERE hidden = 1")
+    suspend fun maxIdShadow(): Long?
+
+    @Query("SELECT MAX(id) FROM PostEntity")
+    suspend fun maxId(): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertShadow(posts: List<PostEntity>)
 
 
 }
