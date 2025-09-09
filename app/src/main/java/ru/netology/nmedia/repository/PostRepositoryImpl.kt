@@ -44,14 +44,14 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override fun getNewerCount(): Flow<Int> = flow {
         while (true) {
             delay(10_000L)
-            val sinceId = dao.maxId()
+            val sinceId = dao.maxIdVisible() ?: dao.maxId()
             val response = PostsApi.service.getNewer(sinceId)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
 
             val body = response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(body.toEntity().map { it.copy(hidden = true) })
+            dao.insertShadow(body.toEntity().map { it.copy(hidden = true) })
             emit(body.size)
         }
     }
@@ -121,17 +121,17 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             throw UnknownError
         }
     }
+    override suspend fun showNewerPosts() = dao.showAll()
 
-
-    override suspend fun showNewerPosts() {
-        val sinceId = dao.maxId() ?: 0L
-        val response = PostsApi.service.getNewer(sinceId)
-        if (!response.isSuccessful) {
-            throw ApiError(response.code(), response.message())
-        }
-        val body = response.body() ?: throw ApiError(response.code(), response.message())
-        dao.insert(body.toEntity())
-    }
+//    override suspend fun showNewerPosts() {
+//        val sinceId = dao.maxId() ?: 0L
+//        val response = PostsApi.service.getNewer(sinceId)
+//        if (!response.isSuccessful) {
+//            throw ApiError(response.code(), response.message())
+//        }
+//        val body = response.body() ?: throw ApiError(response.code(), response.message())
+//        dao.insert(body.toEntity())
+//    }
 
 
 }

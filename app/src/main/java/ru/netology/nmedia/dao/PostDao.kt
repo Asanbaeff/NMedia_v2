@@ -48,5 +48,7 @@ interface PostDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertShadow(posts: List<PostEntity>)
 
+    @Query("SELECT MAX(id) FROM PostEntity WHERE hidden = 0")
+    suspend fun maxIdVisible(): Long?
 
 }
