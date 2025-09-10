@@ -67,19 +67,19 @@ class FeedFragment : Fragment() {
             adapter.submitList(state.posts)
             binding.emptyText.isVisible = state.empty
         }
-        viewModel.newerCount.observe(viewLifecycleOwner) { state ->
-            if (state > 0) {
-                binding.newPostsButton.isVisible = true
-                binding.newPostsButton.text = "Показать $state новых постов"
-            } else {
-                binding.newPostsButton.isVisible = false
-            }
-        }
+//        viewModel.newerCount.observe(viewLifecycleOwner) { state ->
+//            if (state > 0) {
+//                binding.newPostsButton.isVisible = true
+//                binding.newPostsButton.text = "Показать $state новых постов"
+//            } else {
+//                binding.newPostsButton.isVisible = false
+//            }
+//        }
 
-        binding.newPostsButton.setOnClickListener {
-            viewModel.showNewerPosts()
-            binding.list.smoothScrollToPosition(0)
-        }
+//        binding.newPostsButton.setOnClickListener {
+//            viewModel.showNewerPosts()
+//            binding.list.smoothScrollToPosition(0)
+//        }
 
         binding.swiperefresh.setOnRefreshListener {
             viewModel.refreshPosts()

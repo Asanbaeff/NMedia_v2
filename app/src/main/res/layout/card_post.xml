@@ -115,5 +115,10 @@
             app:icon="@drawable/ic_share_24"
             style="@style/Widget.AppTheme.IconButton"
             />
+        <FrameLayout
+            android:id="@+id/fragmentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
