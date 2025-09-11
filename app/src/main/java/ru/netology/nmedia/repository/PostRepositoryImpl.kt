@@ -25,6 +25,8 @@ import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
 import java.io.IOException
 
+
+
 class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override val data = dao.getAll()
         .map(List<PostEntity>::toDto)
@@ -87,11 +89,12 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override suspend fun saveWithAttachment(post: Post, upload: MediaUpload) {
         try {
             val media = upload(upload)
-            // TODO: add support for other types
+
             val postWithAttachment = post.copy(
                 attachment = Attachment(
                     media.id,
-                    AttachmentType.IMAGE
+                    AttachmentType.IMAGE,
+
                 )
             )
             save(postWithAttachment)

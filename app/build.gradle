@@ -1,7 +1,10 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'com.google.devtools.ksp' // вместо устаревшего 'kotlin-kapt'
-apply plugin: 'com.google.gms.google-services'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
+    id 'com.google.gms.google-services'
+}
+
 
 android {
     namespace "ru.netology.nmedia"
@@ -46,6 +49,7 @@ android {
 }
 
 dependencies {
+    implementation libs.androidx.adapters
     def core_version = "1.17.0"
     def appcompat_version = "1.7.1"
     def constraintlayout_version = "2.2.1"

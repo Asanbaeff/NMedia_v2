@@ -22,7 +22,7 @@ data class PostEntity(
     val hidden: Boolean,
 ) {
     fun toDto() =
-        Post(id, author, authorAvatar, content, published, likedByMe, likes, attachment?.toDto())
+        Post(id, author, authorAvatar, content, published, likedByMe, likes, attachment.toDto())
 
     companion object {
         fun fromDto(dto: Post, hidden: Boolean = false) =

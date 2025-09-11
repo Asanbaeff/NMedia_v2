@@ -1,11 +1,16 @@
 package ru.netology.nmedia.adapter
 
+import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.PopupMenu
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
@@ -37,6 +42,8 @@ class PostViewHolder(
     private val binding: CardPostBinding,
     private val onInteractionListener: OnInteractionListener,
 ) : RecyclerView.ViewHolder(binding.root) {
+
+    private val postImage: ImageView = binding.postImage
 
     fun bind(post: Post) {
         binding.apply {
@@ -74,6 +81,25 @@ class PostViewHolder(
             share.setOnClickListener {
                 onInteractionListener.onShare(post)
             }
+        }
+
+        if (post.attachment != null && post.attachment.url.isNotEmpty()) {
+            Glide.with(itemView.context)
+                .load(post.attachment.url)
+                .into(postImage)
+            postImage.visibility = View.VISIBLE
+
+            postImage.setOnClickListener {
+
+                val navController = Navigation.findNavController(it)
+                val bundle = Bundle().apply {
+                    putString("url", post.attachment.url)
+                }
+                navController.navigate(R.id.fullScreenImageFragment, bundle)
+
+            }
+        } else {
+            postImage.visibility = View.GONE
         }
     }
 }
