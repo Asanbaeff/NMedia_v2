@@ -28,5 +28,5 @@
     <string name="description_select_photo" translatable="false">description_select_photo</string>
     <string name="description_take_photo" translatable="false">description_take_photo</string>
     <string name="menu_save" translatable="false">menu_save</string>
-    <string name="description_post_image">description_post_image</string>
+    <string name="description_post_image" translatable="false">description_post_image</string>
 </resources>
