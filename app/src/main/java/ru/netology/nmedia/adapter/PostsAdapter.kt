@@ -1,12 +1,10 @@
 package ru.netology.nmedia.adapter
 
-import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.PopupMenu
-import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +20,8 @@ interface OnInteractionListener {
     fun onEdit(post: Post) {}
     fun onRemove(post: Post) {}
     fun onShare(post: Post) {}
+    fun onImageClick(url: String) {}
+
 }
 
 class PostsAdapter(
@@ -67,7 +67,6 @@ class PostViewHolder(
                                 onInteractionListener.onEdit(post)
                                 true
                             }
-
                             else -> false
                         }
                     }
@@ -83,23 +82,24 @@ class PostViewHolder(
             }
         }
 
-        if (post.attachment != null && post.attachment.url.isNotEmpty()) {
+        val imageUrl = post.attachment?.url?.takeIf { it.isNotBlank() }?.let {
+            "${BuildConfig.BASE_URL}/media/$it"
+        }
+
+        if (imageUrl != null) {
             Glide.with(itemView.context)
-                .load(post.attachment.url)
+                .load(imageUrl)
+                .timeout(15_000)
                 .into(postImage)
             postImage.visibility = View.VISIBLE
 
             postImage.setOnClickListener {
-
-                val navController = Navigation.findNavController(it)
-                val bundle = Bundle().apply {
-                    putString("url", post.attachment.url)
-                }
-                navController.navigate(R.id.fullScreenImageFragment, bundle)
-
+                onInteractionListener.onImageClick(imageUrl)
             }
+
         } else {
             postImage.visibility = View.GONE
+            postImage.setOnClickListener(null)
         }
     }
 }

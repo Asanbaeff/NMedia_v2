@@ -96,7 +96,7 @@
             android:contentDescription="@string/description_post_like"
             app:icon="@drawable/ic_like_24dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/footer"
+            app:layout_constraintTop_toBottomOf="@id/postImage"
             tools:checked="@sample/posts.json/data/likedByMe"
             tools:text="@sample/posts.json/data/likes" />
 
@@ -109,7 +109,7 @@
             android:contentDescription="@string/description_post_share"
             app:icon="@drawable/ic_share_24"
             app:layout_constraintStart_toEndOf="@+id/like"
-            app:layout_constraintTop_toBottomOf="@id/footer" />
+            app:layout_constraintTop_toBottomOf="@id/postImage" />
 
         <ImageView
             android:id="@+id/postImage"
@@ -120,7 +120,7 @@
             android:scaleType="centerCrop"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/share" />
+            app:layout_constraintTop_toBottomOf="@id/content" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

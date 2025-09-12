@@ -33,10 +33,6 @@ class FullScreenImageFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Установить чёрный фон
-        requireActivity().window.statusBarColor =
-            resources.getColor(android.R.color.black, context?.theme)
-
         // Центрировать изображение и заполнить экран
         binding.imageView.scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
         binding.imageView.adjustViewBounds = true
@@ -47,17 +43,8 @@ class FullScreenImageFragment : Fragment() {
                 .into(binding.imageView)
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    companion object {
-        fun newInstance(url: String) = FullScreenImageFragment().apply {
-            arguments = Bundle().apply {
-                putString("url", url)
-            }
-        }
     }
 }

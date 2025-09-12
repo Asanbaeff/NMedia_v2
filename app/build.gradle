@@ -72,6 +72,10 @@ dependencies {
     def play_services_base_version = "18.7.2"
     def core_desugaring_version = "2.1.5"
 
+    def junit_version = "4.13.2"
+    def ext_junit_version = "1.1.5"
+    def espresso_core_version = "3.5.1"
+
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "androidx.core:core-ktx:$core_version"
     implementation "androidx.appcompat:appcompat:$appcompat_version"
@@ -99,4 +103,9 @@ dependencies {
     implementation "com.google.android.gms:play-services-base:$play_services_base_version"
     implementation "androidx.fragment:fragment-ktx:$fragment_version"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$core_desugaring_version"
+
+    testImplementation "junit:junit:$junit_version"
+    androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core_version"
+
 }

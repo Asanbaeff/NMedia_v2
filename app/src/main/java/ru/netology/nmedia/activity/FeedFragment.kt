@@ -52,6 +52,15 @@ class FeedFragment : Fragment() {
                     Intent.createChooser(intent, getString(R.string.chooser_share_post))
                 startActivity(shareIntent)
             }
+
+            override fun onImageClick(url: String) {
+                val bundle = Bundle().apply {
+                    putString("url", url)
+                }
+                findNavController().navigate(R.id.fullScreenImageFragment, bundle)
+            }
+
+
         })
         binding.list.adapter = adapter
         viewModel.dataState.observe(viewLifecycleOwner) { state ->
@@ -68,12 +77,8 @@ class FeedFragment : Fragment() {
             binding.emptyText.isVisible = state.empty
         }
         viewModel.newerCount.observe(viewLifecycleOwner) { state ->
-            if (state > 0) {
-                binding.newPostsButton.isVisible = true
-                binding.newPostsButton.text = "Показать $state новых постов"
-            } else {
-                binding.newPostsButton.isVisible = false
-            }
+            binding.newPostsButton.isVisible = state > 0
+            binding.newPostsButton.text = "Показать $state новых постов"
         }
 
         binding.newPostsButton.setOnClickListener {
