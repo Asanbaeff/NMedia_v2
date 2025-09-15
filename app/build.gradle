@@ -20,7 +20,6 @@ android {
 
     compileOptions {
         coreLibraryDesugaringEnabled true
-
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -46,10 +45,22 @@ android {
             buildConfigField "String", "BASE_URL", '"http://10.0.2.2:9999"'
         }
     }
+
+    packagingOptions {
+        resources {
+            excludes += [
+                    'META-INF/INDEX.LIST',
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/*.kotlin_module',
+                    'META-INF/io.netty.versions.properties'
+            ]
+        }
+    }
 }
 
 dependencies {
     implementation libs.androidx.adapters
+    implementation libs.firebase.appdistribution.gradle
     def core_version = "1.17.0"
     def appcompat_version = "1.7.1"
     def constraintlayout_version = "2.2.1"
@@ -76,7 +87,7 @@ dependencies {
     def ext_junit_version = "1.1.5"
     def espresso_core_version = "3.5.1"
 
-    implementation fileTree(dir: "libs", include: ["*.jar"])
+
     implementation "androidx.core:core-ktx:$core_version"
     implementation "androidx.appcompat:appcompat:$appcompat_version"
     implementation "androidx.constraintlayout:constraintlayout:$constraintlayout_version"
@@ -103,6 +114,7 @@ dependencies {
     implementation "com.google.android.gms:play-services-base:$play_services_base_version"
     implementation "androidx.fragment:fragment-ktx:$fragment_version"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$core_desugaring_version"
+
 
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"

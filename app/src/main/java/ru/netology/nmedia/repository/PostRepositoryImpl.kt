@@ -91,11 +91,12 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             val media = upload(upload)
 
             val postWithAttachment = post.copy(
+
                 attachment = Attachment(
                     media.id,
                     AttachmentType.IMAGE,
 
-                )
+                ),
             )
             save(postWithAttachment)
         } catch (e: AppError) {
@@ -129,8 +130,9 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override suspend fun likeById(id: Long) {
         val post = dao.getPostById(id)?.toDto() ?: return
         val toggled = post.copy(
+
             likedByMe = !post.likedByMe,
-            likes = if (post.likedByMe) post.likes - 1 else post.likes + 1
+            likes = if (post.likedByMe) post.likes - 1 else post.likes + 1,
         )
         dao.insert(PostEntity.fromDto(toggled))
 
