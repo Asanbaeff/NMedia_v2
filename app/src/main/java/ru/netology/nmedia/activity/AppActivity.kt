@@ -83,7 +83,7 @@ class AppActivity : AppCompatActivity() {
                 when (menuItem.itemId) {
                     R.id.signin -> {
                         findNavController(R.id.nav_host_fragment).navigate(R.id.action_feedFragment_to_signInFragment)
-                        AppAuth.getInstance().setAuth(5, "x-token")
+                        //AppAuth.getInstance().setAuth(5, "x-token")
                         true
                     }
 
@@ -94,7 +94,6 @@ class AppActivity : AppCompatActivity() {
                     }
 
                     R.id.signout -> {
-
                         AppAuth.getInstance().removeAuth()
                         true
                     }

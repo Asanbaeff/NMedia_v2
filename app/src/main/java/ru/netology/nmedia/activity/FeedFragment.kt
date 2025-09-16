@@ -63,6 +63,7 @@ class FeedFragment : Fragment() {
 
         })
         binding.list.adapter = adapter
+
         viewModel.dataState.observe(viewLifecycleOwner) { state ->
             binding.progress.isVisible = state.loading
             binding.swiperefresh.isRefreshing = state.refreshing
@@ -72,10 +73,15 @@ class FeedFragment : Fragment() {
                     .show()
             }
         }
+
         viewModel.data.observe(viewLifecycleOwner) { state ->
             adapter.submitList(state.posts)
+            binding.list.post {
+                binding.list.smoothScrollToPosition(0) // отложенный скролл
+            }
             binding.emptyText.isVisible = state.empty
         }
+
         viewModel.newerCount.observe(viewLifecycleOwner) { state ->
             binding.newPostsButton.isVisible = state > 0
             binding.newPostsButton.text = "Показать $state новых постов"
@@ -83,7 +89,8 @@ class FeedFragment : Fragment() {
 
         binding.newPostsButton.setOnClickListener {
             viewModel.showNewerPosts()
-            binding.list.smoothScrollToPosition(0)
+            //binding.list.smoothScrollToPosition(0)
+            binding.newPostsButton.isVisible = false
         }
 
         binding.swiperefresh.setOnRefreshListener {
