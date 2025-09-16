@@ -40,10 +40,4 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-
-
-    fun logout() {
-        AppAuth.getInstance().removeAuth()
-    }
-
 }

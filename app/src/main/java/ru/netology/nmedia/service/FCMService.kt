@@ -13,6 +13,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import ru.netology.nmedia.R
+import ru.netology.nmedia.auth.AppAuth
 import kotlin.random.Random
 
 
@@ -37,15 +38,37 @@ class FCMService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
+        println("Push received!")
+
+        val recipientId = message.data["recipientId"]?.toLongOrNull()
+        val currentId = AppAuth.getInstance().authStateFlow.value.id
+
+        when (recipientId) {
+            null -> {
+                showNotification(message.data["content"])
+            }
+            currentId -> {
+                showNotification(message.data["content"])
+            }
+            0L -> {
+                AppAuth.getInstance().sendPushToken()
+            }
+            else -> {
+                AppAuth.getInstance().sendPushToken()
+            }
+        }
+
 
         message.data[action]?.let {
-           when (Action.valueOf(it)) {
-              Action.LIKE -> handleLike(gson.fromJson(message.data[content], Like::class.java))
-           }
+            when (Action.valueOf(it)) {
+                Action.LIKE -> handleLike(gson.fromJson(message.data[content], Like::class.java))
+            }
         }
+        println(message.data["content"])
     }
 
     override fun onNewToken(token: String) {
+        AppAuth.getInstance().sendPushToken(token)
         println(token)
     }
 
@@ -75,6 +98,17 @@ class FCMService : FirebaseMessagingService() {
             NotificationManagerCompat.from(this)
                 .notify(Random.nextInt(100_000), notification)
         }
+    }
+
+    private fun showNotification(content: String?) {
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Push")
+            .setContentText(content ?: "")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notify(notification)
     }
 }
 
