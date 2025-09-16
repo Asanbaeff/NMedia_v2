@@ -40,31 +40,38 @@ class FCMService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         println("Push received!")
 
-        val recipientId = message.data["recipientId"]?.toLongOrNull()
+        val pushContent = message.data["content"]?.let {
+            gson.fromJson(it, PushContent::class.java)
+        }
+
+        val recipientId = pushContent?.recipientId
         val currentId = AppAuth.getInstance().authStateFlow.value.id
 
         when (recipientId) {
             null -> {
-                showNotification(message.data["content"])
+                showNotification(pushContent?.content)
             }
+
             currentId -> {
-                showNotification(message.data["content"])
+                showNotification(pushContent?.content)
             }
+
             0L -> {
                 AppAuth.getInstance().sendPushToken()
             }
+
             else -> {
                 AppAuth.getInstance().sendPushToken()
             }
         }
 
-
-        message.data[action]?.let {
+        message.data["action"]?.let {
             when (Action.valueOf(it)) {
-                Action.LIKE -> handleLike(gson.fromJson(message.data[content], Like::class.java))
+                Action.LIKE -> handleLike(gson.fromJson(message.data["content"], Like::class.java))
             }
         }
-        println(message.data["content"])
+
+        println(pushContent?.content)
     }
 
     override fun onNewToken(token: String) {
@@ -121,5 +128,10 @@ data class Like(
     val userName: String,
     val postId: Long,
     val postAuthor: String,
+)
+
+data class PushContent(
+    val recipientId: Long?,
+    val content: String
 )
 
