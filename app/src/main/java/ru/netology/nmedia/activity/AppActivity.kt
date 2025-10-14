@@ -27,11 +27,17 @@ import ru.netology.nmedia.databinding.ActivityAppBinding
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import javax.inject.Inject
 
-
 @AndroidEntryPoint
 class AppActivity : AppCompatActivity() {
+
     @Inject
     lateinit var auth: AppAuth
+
+    @Inject
+    lateinit var firebaseMessaging: FirebaseMessaging
+
+    @Inject
+    lateinit var googleApiAvailability: GoogleApiAvailability
 
     private val viewModel: AuthViewModel by viewModels()
 
@@ -50,51 +56,44 @@ class AppActivity : AppCompatActivity() {
         }
 
         intent?.let {
-            if (it.action != Intent.ACTION_SEND) {
-                return@let
+            if (it.action == Intent.ACTION_SEND) {
+                val text = it.getStringExtra(Intent.EXTRA_TEXT)
+                if (!text.isNullOrBlank()) {
+                    intent.removeExtra(Intent.EXTRA_TEXT)
+                    findNavController(R.id.nav_host_fragment).navigate(
+                        R.id.action_feedFragment_to_newPostFragment,
+                        Bundle().apply { textArg = text }
+                    )
+                }
             }
-
-            val text = it.getStringExtra(Intent.EXTRA_TEXT)
-            if (text?.isNotBlank() != true) {
-                return@let
-            }
-
-            intent.removeExtra(Intent.EXTRA_TEXT)
-            findNavController(R.id.nav_host_fragment)
-                .navigate(
-                    R.id.action_feedFragment_to_newPostFragment,
-                    Bundle().apply {
-                        textArg = text
-                    }
-                )
         }
+
         viewModel.data.observe(this) {
             invalidateOptionsMenu()
         }
+
         checkGoogleApiAvailability()
 
-        requestNotificationsPermission()
+        firebaseMessaging.token.addOnSuccessListener {
+            println(it)
+        }
 
         addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.menu_main, menu)
-
-                menu.let {
-                    it.setGroupVisible(R.id.unauthenticated, !viewModel.authenticated)
-                    it.setGroupVisible(R.id.authenticated, viewModel.authenticated)
-                }
+                menu.setGroupVisible(R.id.unauthenticated, !viewModel.authenticated)
+                menu.setGroupVisible(R.id.authenticated, viewModel.authenticated)
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
                 when (menuItem.itemId) {
                     R.id.signin -> {
-                        findNavController(R.id.nav_host_fragment).navigate(R.id.action_feedFragment_to_signInFragment)
-                        //auth.setAuth(5, "x-token")
+                        findNavController(R.id.nav_host_fragment)
+                            .navigate(R.id.action_feedFragment_to_signInFragment)
                         true
                     }
 
                     R.id.signup -> {
-                        //findNavController(R.id.nav_host_fragment).navigate(R.id.action_feedFragment_to_signUpFragment)
                         auth.setAuth(5, "x-token")
                         true
                     }
@@ -109,36 +108,23 @@ class AppActivity : AppCompatActivity() {
         })
     }
 
-
     private fun requestNotificationsPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = Manifest.permission.POST_NOTIFICATIONS
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(permission), 1)
+            }
         }
-
-        val permission = Manifest.permission.POST_NOTIFICATIONS
-
-        if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
-            return
-        }
-        requestPermissions(arrayOf(permission), 1)
     }
 
     private fun checkGoogleApiAvailability() {
-        with(GoogleApiAvailability.getInstance()) {
-            val code = isGooglePlayServicesAvailable(this@AppActivity)
-            if (code == ConnectionResult.SUCCESS) {
-                return@with
+        val code = googleApiAvailability.isGooglePlayServicesAvailable(this)
+        if (code != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(code)) {
+                googleApiAvailability.getErrorDialog(this, code, 9000)?.show()
+            } else {
+                Toast.makeText(this, R.string.google_play_unavailable, Toast.LENGTH_LONG).show()
             }
-            if (isUserResolvableError(code)) {
-                getErrorDialog(this@AppActivity, code, 9000)?.show()
-                return
-            }
-            Toast.makeText(this@AppActivity, R.string.google_play_unavailable, Toast.LENGTH_LONG)
-                .show()
-        }
-
-        FirebaseMessaging.getInstance().token.addOnSuccessListener {
-            println(it)
         }
     }
 }
