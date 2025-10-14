@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nmedia.api.PostsApi
-import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.MediaUpload
@@ -24,10 +23,13 @@ import ru.netology.nmedia.error.AppError
 import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
 import java.io.IOException
+import javax.inject.Singleton
+import javax.inject.Inject
 
 
-
-class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
+@Singleton
+class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkDao: postWorkDao) :
+    PostRepository {
     override val data = dao.getAll()
         .map(List<PostEntity>::toDto)
         .flowOn(Dispatchers.Default)
@@ -48,8 +50,6 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             throw UnknownError
         }
     }
-
-
 
 
     override fun getNewerCount(id: Long): Flow<Int> = flow {
@@ -96,7 +96,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
                     media.id,
                     AttachmentType.IMAGE,
 
-                ),
+                    ),
             )
             save(postWithAttachment)
         } catch (e: AppError) {
