@@ -1,10 +1,11 @@
-package ru.netology.nmedia.api
+package ru.netology.nmedia.auth
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.netology.nmedia.BuildConfig
+import ru.netology.nmedia.api.AuthApiService
 
 private const val BASE_URL = "${BuildConfig.BASE_URL}/api/"
 

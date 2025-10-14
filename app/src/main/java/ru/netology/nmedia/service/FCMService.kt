@@ -51,7 +51,7 @@ class FCMService : FirebaseMessagingService() {
         }
 
         val recipientId = pushContent?.recipientId
-        val currentId = AppAuth.getInstance().authStateFlow.value.id
+        val currentId = appAuth.authStateFlow.value.id
 
         when (recipientId) {
             null -> {
@@ -63,11 +63,11 @@ class FCMService : FirebaseMessagingService() {
             }
 
             0L -> {
-                AppAuth.getInstance().sendPushToken()
+                appAuth.sendPushToken()
             }
 
             else -> {
-                AppAuth.getInstance().sendPushToken()
+                appAuth.sendPushToken()
             }
         }
 

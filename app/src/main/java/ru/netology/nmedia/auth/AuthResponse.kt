@@ -1,4 +1,4 @@
-package ru.netology.nmedia.dto
+package ru.netology.nmedia.auth
 
 data class AuthResponse(
     val id: Long,

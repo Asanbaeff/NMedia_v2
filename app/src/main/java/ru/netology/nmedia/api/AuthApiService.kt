@@ -4,7 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
-import ru.netology.nmedia.dto.AuthResponse
+import ru.netology.nmedia.auth.AuthResponse
 
 interface AuthApiService {
     @FormUrlEncoded

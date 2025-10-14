@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import ru.netology.nmedia.api.ApiService
 import ru.netology.nmedia.api.PostsApi
+import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.MediaUpload
@@ -28,8 +30,10 @@ import javax.inject.Inject
 
 
 @Singleton
-class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkDao: postWorkDao) :
-    PostRepository {
+class PostRepositoryImpl @Inject constructor(
+    private val dao: PostDao,
+    private val apiService: ApiService
+) : PostRepository {
     override val data = dao.getAll()
         .map(List<PostEntity>::toDto)
         .flowOn(Dispatchers.Default)
@@ -37,7 +41,7 @@ class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkD
 
     override suspend fun getAll() {
         try {
-            val response = PostsApi.service.getAll()
+            val response = apiService.getAll()
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -56,7 +60,7 @@ class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkD
         while (true) {
             delay(10_000L)
             val sinceId = dao.maxIdVisible() ?: dao.maxId()
-            val response = PostsApi.service.getNewer(sinceId)
+            val response = apiService.getNewer(sinceId)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -72,7 +76,7 @@ class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkD
 
     override suspend fun save(post: Post) {
         try {
-            val response = PostsApi.service.save(post)
+            val response = apiService.save(post)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -114,7 +118,7 @@ class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkD
         dao.removeById(id)
 
         try {
-            val response = PostsApi.service.removeById(id)
+            val response = apiService.removeById(id)
             if (!response.isSuccessful) {
                 post?.let { dao.insert(PostEntity.fromDto(it)) }
             }
@@ -138,9 +142,9 @@ class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkD
 
         try {
             val response = if (post.likedByMe) {
-                PostsApi.service.dislikeById(id)
+                apiService.dislikeById(id)
             } else {
-                PostsApi.service.likeById(id)
+                apiService.likeById(id)
             }
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
@@ -165,7 +169,7 @@ class PostRepositoryImpl @Inject constructor(private val dao: postDao, postWorkD
                 "file", upload.file.name, upload.file.asRequestBody()
             )
 
-            val response = PostsApi.service.upload(media)
+            val response = apiService.upload(media)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
