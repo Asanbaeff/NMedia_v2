@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import ru.netology.nmedia.auth.AppAuth
 import javax.inject.Inject
 
-
 @HiltAndroidApp
 class NMediaApplication : Application() {
     private val appScope = CoroutineScope(Dispatchers.Default)

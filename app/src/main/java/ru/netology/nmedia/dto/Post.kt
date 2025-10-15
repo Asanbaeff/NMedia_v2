@@ -12,12 +12,10 @@ data class Post(
     val likedByMe: Boolean,
     val likes: Int = 0,
     val attachment: Attachment? = null,
-    val ownerByMe: Boolean = false,
-
+    val ownedByMe: Boolean = false,
 )
+
 data class Attachment(
     val url: String,
-    val type: AttachmentType
-
-    )
-
+    val type: AttachmentType,
+)
