@@ -35,7 +35,7 @@ class FCMService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        // TODO: replace this in homework
+
         println(message.data["content"])
     }
 

@@ -1,16 +1,23 @@
 package ru.netology.nmedia.repository
 
-import androidx.lifecycle.*
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import ru.netology.nmedia.api.*
+import ru.netology.nmedia.api.ApiService
 import ru.netology.nmedia.dao.PostDao
-import ru.netology.nmedia.dto.*
+import ru.netology.nmedia.dto.Attachment
+import ru.netology.nmedia.dto.Media
+import ru.netology.nmedia.dto.MediaUpload
+import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
-import ru.netology.nmedia.entity.toDto
 import ru.netology.nmedia.entity.toEntity
 import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.error.ApiError
@@ -26,9 +33,11 @@ class PostRepositoryImpl @Inject constructor(
     private val postDao: PostDao,
     private val apiService: ApiService,
 ) : PostRepository {
-    override val data = postDao.getAll()
-        .map(List<PostEntity>::toDto)
-        .flowOn(Dispatchers.Default)
+
+    override val data: Flow<PagingData<Post>> = Pager(
+        config = PagingConfig(pageSize = 5, enablePlaceholders = false),
+        pagingSourceFactory = { PostPagingSource(apiService) },
+    ).flow
 
     override suspend fun getAll() {
         try {
@@ -67,7 +76,7 @@ class PostRepositoryImpl @Inject constructor(
             val postWithAttachment = upload?.let {
                 upload(it)
             }?.let {
-                // TODO: add support for other types
+
                 post.copy(attachment = Attachment(it.id, AttachmentType.IMAGE))
             }
             val response = apiService.save(postWithAttachment ?: post)
@@ -85,11 +94,11 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeById(id: Long) {
-        TODO("Not yet implemented")
+
     }
 
     override suspend fun likeById(id: Long) {
-        TODO("Not yet implemented")
+
     }
 
     override suspend fun upload(upload: MediaUpload): Media {
