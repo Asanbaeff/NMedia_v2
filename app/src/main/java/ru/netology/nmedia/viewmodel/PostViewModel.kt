@@ -66,17 +66,12 @@ class PostViewModel @Inject constructor(
 
     init {
         loadPosts()
-        viewModelScope.launch {
-            auth.authStateFlow.collectLatest {
-                refreshPosts()
-            }
-        }
     }
 
     fun loadPosts() = viewModelScope.launch {
         try {
             _dataState.value = FeedModelState(loading = true)
-            repository.getAll()
+            // repository.stream.cachedIn(viewModelScope).
             _dataState.value = FeedModelState()
         } catch (e: Exception) {
             _dataState.value = FeedModelState(error = true)
@@ -86,7 +81,7 @@ class PostViewModel @Inject constructor(
     fun refreshPosts() = viewModelScope.launch {
         try {
             _dataState.value = FeedModelState(refreshing = true)
-            repository.getAll()
+//            repository.getAll()
             _dataState.value = FeedModelState()
         } catch (e: Exception) {
             _dataState.value = FeedModelState(error = true)
@@ -127,23 +122,11 @@ class PostViewModel @Inject constructor(
         _photo.value = PhotoModel(uri)
     }
 
-    fun likeById(id: Long) = viewModelScope.launch {
-        try {
-            repository.likeById(id)
-            _dataState.value = FeedModelState()
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
-        }
+    fun likeById(id: Long) {
+        TODO()
     }
 
-    fun removeById(id: Long) = viewModelScope.launch {
-        try {
-            repository.removeById(id)
-            _dataState.value = FeedModelState()
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
-        }
+    fun removeById(id: Long) {
+        TODO()
     }
-
-
 }

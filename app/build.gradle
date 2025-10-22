@@ -121,6 +121,7 @@ dependencies {
     ksp "com.google.dagger:hilt-compiler:$hilt_version"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$core_desugaring_version"
     implementation "androidx.paging:paging-runtime-ktx:3.3.6"
+    implementation "androidx.room:room-paging:2.7.2"
 
 
     testImplementation "junit:junit:$junit_version"

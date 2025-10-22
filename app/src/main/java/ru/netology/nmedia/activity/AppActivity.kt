@@ -29,7 +29,7 @@ import ru.netology.nmedia.viewmodel.AuthViewModel
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class AppActivity : AppCompatActivity(R.layout.activity_app) {
+class AppActivity : AppCompatActivity() {
     @Inject
     lateinit var repository: PostRepository
 
@@ -101,19 +101,19 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
                 when (menuItem.itemId) {
                     R.id.signin -> {
-                        //findNavController(R.id.nav_host_fragment).navigate(R.id.action_feedFragment_to_signInFragment)
+                        // TODO: just hardcode it, implementation must be in homework
                         auth.setAuth(5, "x-token")
                         true
                     }
 
                     R.id.signup -> {
-
+                        // TODO: just hardcode it, implementation must be in homework
                         auth.setAuth(5, "x-token")
                         true
                     }
 
                     R.id.signout -> {
-
+                        // TODO: just hardcode it, implementation must be in homework
                         auth.removeAuth()
                         true
                     }

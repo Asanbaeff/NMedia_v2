@@ -17,7 +17,7 @@ private const val BASE_URL = "${BuildConfig.BASE_URL}/api/slow/"
 fun okhttp(vararg interceptors: Interceptor): OkHttpClient = OkHttpClient.Builder()
     .apply {
         interceptors.forEach {
-           this.addInterceptor(it)
+            this.addInterceptor(it)
         }
     }
     .build()

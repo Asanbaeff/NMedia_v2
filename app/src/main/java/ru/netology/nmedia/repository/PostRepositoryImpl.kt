@@ -1,18 +1,15 @@
 package ru.netology.nmedia.repository
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
+import androidx.paging.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.*
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nmedia.api.ApiService
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dao.PostRemoteKeyDao
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.MediaUpload
@@ -30,14 +27,20 @@ import javax.inject.Singleton
 
 @Singleton
 class PostRepositoryImpl @Inject constructor(
+    appDb: AppDb,
     private val postDao: PostDao,
+    postRemoteKeyDao: PostRemoteKeyDao,
     private val apiService: ApiService,
 ) : PostRepository {
 
+    @OptIn(ExperimentalPagingApi::class)
     override val data: Flow<PagingData<Post>> = Pager(
-        config = PagingConfig(pageSize = 5, enablePlaceholders = false),
-        pagingSourceFactory = { PostPagingSource(apiService) },
-    ).flow
+        config = PagingConfig(pageSize = 25),
+        remoteMediator = PostRemoteMediator(apiService, appDb, postDao, postRemoteKeyDao),
+        pagingSourceFactory = postDao::pagingSource,
+    ).flow.map { pagingData ->
+        pagingData.map(PostEntity::toDto)
+    }
 
     override suspend fun getAll() {
         try {
@@ -76,7 +79,7 @@ class PostRepositoryImpl @Inject constructor(
             val postWithAttachment = upload?.let {
                 upload(it)
             }?.let {
-
+                // TODO: add support for other types
                 post.copy(attachment = Attachment(it.id, AttachmentType.IMAGE))
             }
             val response = apiService.save(postWithAttachment ?: post)
@@ -94,11 +97,11 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeById(id: Long) {
-
+        TODO("Not yet implemented")
     }
 
     override suspend fun likeById(id: Long) {
-
+        TODO("Not yet implemented")
     }
 
     override suspend fun upload(upload: MediaUpload): Media {
